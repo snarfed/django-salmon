@@ -9,6 +9,7 @@ ATOM_NS = 'http://www.w3.org/2005/Atom'
 
 
 class SalmonAtom1Feed(Atom1Feed):
+
     def add_root_elements(self, handler):
         salmon = self.feed.get('salmon-endpoint')
         if salmon is not None:
@@ -18,6 +19,7 @@ class SalmonAtom1Feed(Atom1Feed):
 
 
 class SalmonAtom1EntryFeed(Atom1Feed):
+
     def __init__(self, title, link, description, author_name,
                  author_link, pubdate, **kwargs):
         """
