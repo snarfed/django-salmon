@@ -6,6 +6,8 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Util import number
 
+from salmon import utils
+
 _WHITESPACE_RE = re.compile(r'\s+')
 _KEY_RE = re.compile(
     r"""RSA\.
@@ -16,11 +18,6 @@ _KEY_RE = re.compile(
     (?P<private_exp>[^\.]+)
     )?""",
     re.VERBOSE)
-
-
-def encode(s):
-    return base64.urlsafe_b64encode(
-        unicode(s).encode('utf-8')).encode('utf-8')
 
 
 def extract_key_details(key):
@@ -63,7 +60,7 @@ def magic_envelope(raw_data, data_type, key):
     """Wrap the provided data in a magic envelope."""
     key = re.sub(_WHITESPACE_RE, '', key)
     keypair = RSA.construct((extract_key_details(key)))
-    encoded_data = encode(raw_data)
+    encoded_data = utils.encode(raw_data)
     signed = sign(encoded_data, keypair)
     # todo - xml construction
-    return str(dict(data=encoded_data, sig=signed))
+    return utils.create_magic_envelope(encoded_data, signed)
