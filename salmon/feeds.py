@@ -2,7 +2,7 @@ from StringIO import StringIO
 
 from django.core.urlresolvers import reverse
 from django.contrib.syndication.views import Feed
-from django.utils.feedgenerator import Atom1Feed
+from django.utils.feedgenerator import Atom1Feed, get_tag_uri
 from django.utils.xmlutils import SimplerXMLGenerator
 
 ATOM_NS = 'http://www.w3.org/2005/Atom'
@@ -33,15 +33,24 @@ class SalmonAtom1EntryFeed(Atom1Feed):
             title=u'',
             link=u'',
             description=u'')
+        self.parent_href = kwargs.get('parent_href', None)
+        self.parent_updated = kwargs.get('parent_updated', None)
         self.add_item(title, link, description,
                       author_name=author_name,
                       author_link=author_link,
                       pubdate=pubdate, **kwargs)
 
+    def add_item_elements(self, handler, item):
+        handler.addQuickElement('thr:in-reply-to',
+                                get_tag_uri(self.parent_href,
+                                            self.parent_updated))
+        super(SalmonAtom1EntryFeed, self).add_item_elements(handler, item)
+
     def item_attributes(self, item):
         """Put the Atom namespace into the entry element."""
         return {
             'xmlns': ATOM_NS,
+            'xmlns:thr': 'http://purl.org/syndication/thread/1.0',
         }
 
     def __unicode__(self):
