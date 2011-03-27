@@ -19,8 +19,6 @@ class SubscriptionManager(models.Manager):
 
     def get_for_object(self, obj):
         content_type = ContentType.objects.get_for_model(obj)
-        print content_type
-        print obj.id
         try:
             sub = Subscription.objects.get(
                 content_type=content_type, object_id=obj.id)
