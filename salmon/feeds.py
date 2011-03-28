@@ -6,6 +6,7 @@ from django.utils.feedgenerator import Atom1Feed, get_tag_uri
 from django.utils.xmlutils import SimplerXMLGenerator
 
 ATOM_NS = 'http://www.w3.org/2005/Atom'
+ATOM_THREADING_NS = 'http://purl.org/syndication/thread/1.0'
 
 
 class SalmonAtom1Feed(Atom1Feed):
@@ -17,49 +18,28 @@ class SalmonAtom1Feed(Atom1Feed):
                                                   u'href': salmon})
         super(SalmonAtom1Feed, self).add_root_elements(handler)
 
-
-class SalmonAtom1EntryFeed(Atom1Feed):
-
-    def __init__(self, title, link, description, author_name,
-                 author_link, pubdate, **kwargs):
-        """
-        We don't create an atom:feed element, so don't force the caller
-        to pass in the same kwargs as are required by Atom1Feed's constructor.
-        Instead, mimic the signature of Atom1Feed.add_item with some stricter
-        requirements (author and updated aren't optional elements in Atom 1.0).
-        See: http://tools.ietf.org/html/rfc4287#section-4.1.2
-        """
-        super(SalmonAtom1EntryFeed, self).__init__(
-            title=u'',
-            link=u'',
-            description=u'')
-        self.parent_href = kwargs.get('parent_href', None)
-        self.parent_updated = kwargs.get('parent_updated', None)
-        self.add_item(title, link, description,
-                      author_name=author_name,
-                      author_link=author_link,
-                      pubdate=pubdate, **kwargs)
-
     def add_item_elements(self, handler, item):
-        handler.addQuickElement('thr:in-reply-to',
-                                get_tag_uri(self.parent_href,
-                                            self.parent_updated))
-        super(SalmonAtom1EntryFeed, self).add_item_elements(handler, item)
+        if 'parent_href' in item and 'parent_updated' in item:
+            handler.addQuickElement('thr:in-reply-to',
+                                    get_tag_uri(item['parent_href'],
+                                                item['parent_updated']))
+        super(SalmonAtom1Feed, self).add_item_elements(handler, item)
 
-    def item_attributes(self, item):
-        """Put the Atom namespace into the entry element."""
+    def root_attributes(self):
+        """Put the Atom namespace into the root element."""
         return {
             'xmlns': ATOM_NS,
-            'xmlns:thr': 'http://purl.org/syndication/thread/1.0',
+            'xmlns:thr': ATOM_THREADING_NS,
         }
 
-    def __unicode__(self):
-        """Write out XML into a string buffer."""
-        sb = StringIO()
-        sb.write(u'<?xml version="1.0" encoding="utf-8"?>')
-        handler = SimplerXMLGenerator(out=sb)
-        self.write_items(handler)
-        return sb.getvalue()
+
+class SalmonAtom1EntryFeed(Atom1Feed):
+    def item_attributes(self):
+        """Put the Atom namespace into the root element."""
+        return {
+            'xmlns': ATOM_NS,
+            'xmlns:thr': ATOM_THREADING_NS,
+        }
 
 
 class SalmonFeed(Feed):
@@ -74,3 +54,18 @@ class SalmonFeed(Feed):
         return {
             'salmon-endpoint': endpoint,
         }
+
+
+def create_entry_feed(title, link, description, author_name,
+                      author_link, pubdate, parent_href, parent_updated):
+    feed = SalmonAtom1EntryFeed(title='', link='', description='')
+    feed.add_item(
+        title, link, description,
+        author_name=author_name, author_link=author_link, pubdate=pubdate,
+        parent_href=parent_href, parent_updated=parent_updated,
+    )
+    sb = StringIO()
+    sb.write(u'<?xml version="1.0" encoding="utf-8"?>')
+    handler = SimplerXMLGenerator(out=sb)
+    feed.write_items(handler)
+    return sb.getvalue()
