@@ -1,6 +1,9 @@
 import base64
 from xml.etree import ElementTree
 
+from django.conf import settings
+from django.utils.importlib import import_module
+
 MAGIC_ENV_NS = 'http://salmon-protocol.org/ns/magic-env'
 
 
@@ -38,3 +41,15 @@ def decode(data):
 def encode(s):
     return base64.urlsafe_b64encode(
         unicode(s).encode('utf-8')).encode('utf-8')
+
+
+def slap_handler(data, mime_type):
+    pass
+
+
+def slap_notify(data, mime_type):
+    notifier = getattr(settings, 'SALMON_SLAP_HANDLER',
+                       'salmon.utils.slap_handler')
+    notifier, notifier_function = notifier.rsplit('.', 1)
+    notifier_module = import_module(notifier)
+    return getattr(notifier_module, notifier_function)(data, mime_type)
