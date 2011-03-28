@@ -34,12 +34,28 @@ class SalmonAtom1Feed(Atom1Feed):
 
 
 class SalmonAtom1EntryFeed(Atom1Feed):
-    def item_attributes(self):
+
+    def item_attributes(self, item):
         """Put the Atom namespace into the root element."""
         return {
             'xmlns': ATOM_NS,
             'xmlns:thr': ATOM_THREADING_NS,
         }
+
+    def add_item(self, *args, **kwargs):
+        super(SalmonAtom1EntryFeed, self).add_item(*args, **kwargs)
+        parent_href = kwargs.get('parent_href', None)
+        parent_updated = kwargs.get('parent_updated', None)
+        if parent_href and parent_updated:
+            item = self.items.pop()
+            item['thr:in-reply-to'] = get_tag_uri(parent_href, parent_updated)
+            self.items.append(item)
+
+    def add_item_elements(self, handler, item):
+        super(SalmonAtom1EntryFeed, self).add_item_elements(handler, item)
+        if 'thr:in-reply-to' in item:
+            handler.addQuickElement(
+                u'thr:in-reply-to', item['thr:in-reply-to'])
 
 
 class SalmonFeed(Feed):

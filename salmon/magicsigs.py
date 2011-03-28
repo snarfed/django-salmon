@@ -62,5 +62,4 @@ def magic_envelope(raw_data, data_type, key):
     keypair = RSA.construct((extract_key_details(key)))
     encoded_data = utils.encode(raw_data)
     signed = sign(encoded_data, keypair)
-    # todo - xml construction
     return utils.create_magic_envelope(encoded_data, signed)
