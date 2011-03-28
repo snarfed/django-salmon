@@ -44,11 +44,10 @@ class SalmonAtom1EntryFeed(Atom1Feed):
 
     def add_item(self, *args, **kwargs):
         super(SalmonAtom1EntryFeed, self).add_item(*args, **kwargs)
-        parent_href = kwargs.get('parent_href', None)
-        parent_updated = kwargs.get('parent_updated', None)
-        if parent_href and parent_updated:
+        parent_id = kwargs.get('parent_id', None)
+        if parent_id:
             item = self.items.pop()
-            item['thr:in-reply-to'] = get_tag_uri(parent_href, parent_updated)
+            item['thr:in-reply-to'] = parent_id
             self.items.append(item)
 
     def add_item_elements(self, handler, item):
@@ -73,12 +72,12 @@ class SalmonFeed(Feed):
 
 
 def create_entry_feed(title, link, description, author_name,
-                      author_link, pubdate, parent_href, parent_updated):
+                      author_link, pubdate, parent_id):
     feed = SalmonAtom1EntryFeed(title='', link='', description='')
     feed.add_item(
         title, link, description,
         author_name=author_name, author_link=author_link, pubdate=pubdate,
-        parent_href=parent_href, parent_updated=parent_updated,
+        parent_id=parent_id,
     )
     sb = StringIO()
     sb.write(u'<?xml version="1.0" encoding="utf-8"?>')
