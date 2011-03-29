@@ -40,6 +40,8 @@ You will need models to represent feeds and comments. Set up signals for your fe
 
 Set up the following signal for your comment model: ::
 
+   from salmon.feeds import create_entry_feed
+
    def comment_handler(sender, **kwargs):
        comment = kwargs.get('instance', None)
        if not comment:
@@ -47,17 +49,20 @@ Set up the following signal for your comment model: ::
        url = 'https://%s%s' % (
            Site.objects.get_current(),
            comment.get_absolute_url())
-       feed = SalmonAtom1EntryFeed(
-           comment.comment,
-           url,
-           comment.comment,
-           author_name=comment.user_name,
-           author_link='acct:' + comment.user_email,
-           pubdate=comment.submit_date,
-       )
        parent = comment.content_object
+       feed = create_entry_feed(comment.comment, url, comment.comment,
+                                author_name=comment.user_name,
+                                author_link='acct:' + comment.user_email,
+                                pubdate=comment.submit_date,
+                                parent_id=parent.entry_id)
        salmon.slap(feed, parent.feed)
    post_save.connect(comment_handler, sender=Comment)
+
+Finally, in order to process salmon slaps, you must add a handler function to ``settings.py``: ::
+
+   SALMON_SLAP_HANDLER = 'comments.salmon_handler'
+
+This function will receive two parameters: the actual salmon and the mime_type (currently always ``application/atom+xml`` until support for other formats is added). It is the responsibility of this handler function to discover what content the salmon is associated with (in the case of mentions or replies) and handle accordingly.
 
 Because this is an incomplete package, in order to test the current functionality, you will need to add a private key to ``settings.py`` or equivalent: ::
 
