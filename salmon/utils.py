@@ -78,8 +78,6 @@ def public_key_discovery(author_uri):
     if not author_uri.startswith('acct:'):
         return False  # not implemented yet
     (user, host) = author_uri[5:].split('@')
-    if settings.DEBUG:
-        host = 'localhost:8888'
     url = 'http://%s/.well-known/host-meta' % (host,)
     f = urllib2.urlopen(url)
     host_xrd = f.read()
@@ -98,7 +96,7 @@ def verify_signature(author_uri, data, signed):
     rsa = RSA.construct((public_exp_long, mod_long))
     putative = base64.urlsafe_b64decode(signed.encode('utf-8'))
     putative = number.bytes_to_long(putative)
-    esma = magicsigs.make_esma_msg(data, rsa)
+    esma = magicsigs.make_esma_msg(encode(data), rsa)
     return rsa.verify(esma, (putative,))
 
 
