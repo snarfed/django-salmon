@@ -54,7 +54,8 @@ class SalmonAtom1EntryFeed(Atom1Feed):
         super(SalmonAtom1EntryFeed, self).add_item_elements(handler, item)
         if 'thr:in-reply-to' in item:
             handler.addQuickElement(
-                u'thr:in-reply-to', item['thr:in-reply-to'])
+                u'thr:in-reply-to', item['thr:in-reply-to'], {
+                    'ref': item['thr:in-reply-to']})
 
 
 class SalmonFeed(Feed):
