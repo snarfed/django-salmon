@@ -30,16 +30,8 @@ def extract_key_details(key):
     )
 
 
-def sign(data, keypair):
-    """
-    Sign the data. Most of this is taken verbatim from John Panzer's
-    reference implementation:
-
-    http://code.google.com/p/salmon-protocol/
-    """
-    rng = Random.new().read
+def make_esma_msg(data, keypair):
     h = SHA256.new(data).digest()
-
     magic_sha256_header = [0x30, 0x31, 0x30, 0xd, 0x6, 0x9, 0x60, 0x86,
                            0x48, 0x1, 0x65, 0x3, 0x4, 0x2, 0x1, 0x5, 0x0,
                            0x4, 0x20]
@@ -49,8 +41,18 @@ def sign(data, keypair):
     modulus_size = keypair.size()
     msg_size_bits = modulus_size + 8 - (modulus_size % 8)
     pad_string = chr(0xFF) * (msg_size_bits / 8 - len(encoded) - 3)
-    esma_msg = chr(0) + chr(1) + pad_string + chr(0) + encoded
+    return chr(0) + chr(1) + pad_string + chr(0) + encoded
 
+
+def sign(data, keypair):
+    """
+    Sign the data. Most of this is taken verbatim from John Panzer's
+    reference implementation:
+
+    http://code.google.com/p/salmon-protocol/
+    """
+    rng = Random.new().read
+    esma_msg = make_esma_msg(data, keypair)
     sig_long = keypair.sign(esma_msg, rng)[0]
     sig_bytes = number.long_to_bytes(sig_long)
     return base64.urlsafe_b64encode(sig_bytes).encode('utf-8')
