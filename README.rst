@@ -88,4 +88,4 @@ To generate a sample key using `PyCrypto`_: ::
 
 .. _PyCrypto: http://pycrypto.org/
 
-** NOTE: ** This is a work in progress and at the moment is not functional.
+** NOTE: ** This is a work in progress and at the moment only supports a very specific protocol flow with limited kinds of data.
