@@ -40,18 +40,16 @@ def unsubscribe(feed):
     Subscription.objects.unsubscribe(feed)
 
 
-def slap(content, source):
+def slap(content, source, user):
     """Notify a source of updated content."""
     sub = Subscription.objects.get_for_object(source)
     if not sub:
         return  # nothing to do
 
-    # TODO(paulosman)
-    # hand waving on key storage right now. Just use a conf setting.
-    # eventually will have to get this associated with the user somehow.
-    key = getattr(settings, 'SALMON_USER_KEYPAIR', None)
-    if not key:
-        return
+    keypairs = user.userkeypair_set.all()
+    if len(keypairs) < 1:
+        return  # this user can't sign the salmon
+    key = keypairs[0]
 
     # hand waving on mime_type right now
     magic_envelope = magicsigs.magic_envelope(
