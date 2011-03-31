@@ -46,6 +46,10 @@ Set up the following signal for your comment model: ::
        comment = kwargs.get('instance', None)
        if not comment:
            return
+       try:
+           user = User.objects.get(username=comment.user_name)
+       except User.DoesNotExist:
+           return
        url = 'https://%s%s' % (
            Site.objects.get_current(),
            comment.get_absolute_url())
@@ -55,7 +59,7 @@ Set up the following signal for your comment model: ::
                                 author_link='acct:' + comment.user_email,
                                 pubdate=comment.submit_date,
                                 parent_id=parent.entry_id)
-       salmon.slap(feed, parent.feed)
+       salmon.slap(feed, parent.feed, user)
    post_save.connect(comment_handler, sender=Comment)
 
 Finally, in order to process salmon slaps, you must add a handler function to ``settings.py``: ::
@@ -63,29 +67,5 @@ Finally, in order to process salmon slaps, you must add a handler function to ``
    SALMON_SLAP_HANDLER = 'comments.salmon_handler'
 
 This function will receive two parameters: the actual salmon and the mime_type (currently always ``application/atom+xml`` until support for other formats is added). It is the responsibility of this handler function to discover what content the salmon is associated with (in the case of mentions or replies) and handle accordingly.
-
-Because this is an incomplete package, in order to test the current functionality, you will need to add a private key to ``settings.py`` or equivalent: ::
-
-   SALMON_USER_KEYPAIR = 'RSA.<modulus>.<public exponent>.<private exponent>'
-
-To generate a sample key using `PyCrypto`_: ::
-
-   import base64
-
-   from Crypto import Random
-   from Crypto.PublicKey import RSA
-   from Crypto.Util import number
-
-   rng = Random.new().read
-   RSAkey = RSA.generate(1024, rng)
-
-   encode = lambda a: base64.urlsafe_b64encode(number.long_to_bytes(a))
-
-   exp = encode(RSAkey.n)
-   private_exp = encode(RSAkey.d)
-   mod = encode(RSAkey.e)
-   print "RSA.%s.%s.%s" % (mod, exp, private_exp)
-
-.. _PyCrypto: http://pycrypto.org/
 
 ** NOTE: ** This is a work in progress and at the moment only supports a very specific protocol flow with limited kinds of data.
