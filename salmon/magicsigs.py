@@ -20,6 +20,11 @@ _KEY_RE = re.compile(
     re.VERBOSE)
 
 
+def base64_to_long(x):
+    """Convert ``x`` from URL safe base64 encoding to a long integer."""
+    return number.bytes_to_long(base64.urlsafe_b64decode(x))
+
+
 def extract_key_details(key):
     """
     Given a URL safe base64 encoded RSA key pair, return the modulus,
@@ -74,6 +79,18 @@ def sign(data, keypair):
     sig_long = keypair.sign(esma_msg, rng)[0]
     sig_bytes = number.long_to_bytes(sig_long)
     return base64.urlsafe_b64encode(sig_bytes).encode('utf-8')
+
+
+def verify(author_uri, data, signed):
+    """Verify that ``signed`` is ``data`` signed by ``author_uri``."""
+    public_exp, mod = utils.get_public_key(author_uri)
+    public_exp = base64_to_long(public_exp)
+    mod = base64_to_long(mod)
+    rsa = RSA.construct((public_exp, mod))
+    data = utils.encode(data)
+    putative = base64_to_long(signed.encode('utf-8'))
+    esma = make_esma_msg(data, rsa)
+    return rsa.verify(esma, (putative,))
 
 
 def magic_envelope(raw_data, data_type, key):

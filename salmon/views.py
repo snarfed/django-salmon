@@ -2,7 +2,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from salmon import utils
+from salmon import utils, magicsigs
 
 
 @csrf_exempt
@@ -13,7 +13,7 @@ def endpoint(request):
 
     # verify that data was signed by sender
     author_uri = utils.parse_author_uri_from_atom(parsed['data'])
-    if not utils.verify_signature(author_uri, parsed['data'], parsed['sig']):
+    if not magicsigs.verify(author_uri, parsed['data'], parsed['sig']):
         return HttpResponseForbidden()
 
     # hand waving on mime_type right now, but seems like this'd be

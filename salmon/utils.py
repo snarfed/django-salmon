@@ -5,11 +5,6 @@ from xml.etree import ElementTree
 from django.conf import settings
 from django.utils.importlib import import_module
 
-from Crypto.PublicKey import RSA
-from Crypto.Util import number
-
-import magicsigs
-
 
 ATOM_NS = 'http://www.w3.org/2005/Atom'
 MAGIC_ENV_NS = 'http://salmon-protocol.org/ns/magic-env'
@@ -62,7 +57,7 @@ def parse_host_xrd(xrd):
     return None
 
 
-def get_public_key(user_xrd):
+def parse_public_key_from_xrd(user_xrd):
     et = ElementTree.fromstring(user_xrd)
     links = et.findall(normalize('Link', XRD_NS))
     magic_sig_links = [link for link in links
@@ -74,7 +69,7 @@ def get_public_key(user_xrd):
     return None
 
 
-def public_key_discovery(author_uri):
+def get_public_key(author_uri):
     if not author_uri.startswith('acct:'):
         return False  # not implemented yet
     (user, host) = author_uri[5:].split('@')
@@ -85,19 +80,7 @@ def public_key_discovery(author_uri):
     webfinger_url = uri_template.replace('{uri}', author_uri[5:])
     f = urllib2.urlopen(webfinger_url)
     user_xrd = f.read()
-    return get_public_key(user_xrd)
-
-
-def verify_signature(author_uri, data, signed):
-    public_exp, mod = public_key_discovery(author_uri)
-    b64_to_long = lambda x: number.bytes_to_long(base64.urlsafe_b64decode(x))
-    public_exp_long = b64_to_long(public_exp)
-    mod_long = b64_to_long(mod)
-    rsa = RSA.construct((public_exp_long, mod_long))
-    putative = base64.urlsafe_b64decode(signed.encode('utf-8'))
-    putative = number.bytes_to_long(putative)
-    esma = magicsigs.make_esma_msg(encode(data), rsa)
-    return rsa.verify(esma, (putative,))
+    return parse_public_key_from_xrd(user_xrd)
 
 
 def decode(data):
