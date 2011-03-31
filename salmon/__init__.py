@@ -59,7 +59,7 @@ def slap(content, source, user):
     req = urllib2.Request(sub.salmon_endpoint, magic_envelope, headers)
     try:
         response = urllib2.urlopen(req)
-        print response
+        print response.read()
     except urllib2.HTTPError, e:
         print repr(e)
         print e.read()
