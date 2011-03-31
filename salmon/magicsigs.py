@@ -78,8 +78,8 @@ def sign(data, keypair):
 
 def magic_envelope(raw_data, data_type, key):
     """Wrap the provided data in a magic envelope."""
-    key = re.sub(_WHITESPACE_RE, '', key)
-    keypair = RSA.construct((extract_key_details(key)))
+    keypair = RSA.construct(
+        (key.mod, key.public_exponent, key.private_exponent))
     encoded_data = utils.encode(raw_data)
     signed = sign(encoded_data, keypair)
     return utils.create_magic_envelope(encoded_data, signed)

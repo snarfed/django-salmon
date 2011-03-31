@@ -1,10 +1,8 @@
 import urllib2
 import feedparser
 
-from django.conf import settings
-
 from salmon import magicsigs
-from salmon.models import Subscription
+from salmon.models import Subscription, UserKeyPair
 
 
 def discover_salmon_endpoint(url):
@@ -46,14 +44,11 @@ def slap(content, source, user):
     if not sub:
         return  # nothing to do
 
-    keypairs = user.userkeypair_set.all()
-    if len(keypairs) < 1:
-        return  # this user can't sign the salmon
-    key = keypairs[0]
+    keypair = UserKeyPair.objects.get_or_create(user)
 
     # hand waving on mime_type right now
     magic_envelope = magicsigs.magic_envelope(
-        content, 'application/atom+xml', key)
+        content, 'application/atom+xml', keypair)
 
     # TODO(paulosman)
     # really crappy HTTP client right now. Can improve when the basic
