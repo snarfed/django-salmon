@@ -65,7 +65,7 @@ def parse_public_key_from_xrd(user_xrd):
                            and link.attrib['rel'] == 'magic-public-key')]
     for link in magic_sig_links:
         if 'href' in link.attrib:
-            return link.attrib['href'].split('.')[1:-1]
+            return link.attrib['href'].split('.')[1:]  # TODO(paulosman)
     return None
 
 
