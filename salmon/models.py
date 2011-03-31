@@ -1,6 +1,40 @@
 from django.db import models
 from django.contrib import admin
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+
+
+from salmon import magicsigs
+
+
+class UserKeyPairManager(models.Manager):
+
+    def get_or_create(self, user):
+        try:
+            user_keypair = UserKeyPair.objects.get(user=user)
+        except UserKeyPair.DoesNotExist:
+            (mod, exp, private_exp) = magicsigs.generate()
+            user_keypair = UserKeyPair(
+                user=user, mod=mod, public_exponent=exp,
+                private_exponent=private_exp)
+            user_keypair.save()
+        return user_keypair
+
+
+class UserKeyPair(models.Model):
+    user = models.ForeignKey(User)
+    mod = models.CharField(max_length=100)
+    public_exponent = models.CharField(max_length=500)
+    private_exponent = models.CharField(max_length=500)
+
+    objects = UserKeyPairManager()
+
+    def __unicode__(self):
+        return "RSA.%s.%s.%s" % (self.mod, self.public_exponent,
+                                 self.private_exponent)
+
+    def __string__(self):
+        return self.__unicode__()
 
 
 class SubscriptionManager(models.Manager):

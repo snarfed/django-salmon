@@ -21,6 +21,11 @@ _KEY_RE = re.compile(
 
 
 def extract_key_details(key):
+    """
+    Given a URL safe base64 encoded RSA key pair, return the modulus,
+    public exponent and private exponent as a tuple of long integers.
+    This is the format expected by ``Crypto.PublicKey.RSA.construct``.
+    """
     match = _KEY_RE.match(key)
     b64_to_num = lambda a: number.bytes_to_long(base64.urlsafe_b64decode(a))
     return (
@@ -28,6 +33,19 @@ def extract_key_details(key):
         b64_to_num(match.group('exp')),
         b64_to_num(match.group('private_exp')),
     )
+
+
+def generate(bits=1024):
+    """
+    Generate an RSA keypair and return the modulus, public exponent and private
+    exponent as a URL safe base64 encoded strings.
+    """
+    rng = Random.new().read
+    key = RSA.generate(bits, rng)
+    exp = utils.encode(key.n)
+    private_exp = utils.encode(key.d)
+    mod = utils.encode(key.e)
+    return (mod, exp, private_exp)
 
 
 def make_esma_msg(data, keypair):
