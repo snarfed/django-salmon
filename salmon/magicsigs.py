@@ -25,6 +25,11 @@ def base64_to_long(x):
     return number.bytes_to_long(base64.urlsafe_b64decode(x))
 
 
+def long_to_base64(x):
+    """Convert ``x`` from a long integer to base64 URL safe encoding."""
+    return base64.urlsafe_b64encode(number.long_to_bytes(x))
+
+
 def extract_key_details(key):
     """
     Given a URL safe base64 encoded RSA key pair, return the modulus,
@@ -47,10 +52,10 @@ def generate(bits=1024):
     """
     rng = Random.new().read
     key = RSA.generate(bits, rng)
-    exp = utils.encode(key.n)
-    private_exp = utils.encode(key.d)
-    mod = utils.encode(key.e)
-    return (mod, exp, private_exp)
+    # e - modulus, n - exponent, d - private exponent
+    return (long_to_base64(key.e),
+            long_to_base64(key.n),
+            long_to_base64(key.d))
 
 
 def make_esma_msg(data, keypair):
@@ -96,7 +101,9 @@ def verify(author_uri, data, signed):
 def magic_envelope(raw_data, data_type, key):
     """Wrap the provided data in a magic envelope."""
     keypair = RSA.construct(
-        (key.mod, key.public_exponent, key.private_exponent))
+        (base64_to_long(key.public_exponent.encode('utf-8')),
+         base64_to_long(key.mod.encode('utf-8')),
+         base64_to_long(key.private_exponent.encode('utf-8'))))
     encoded_data = utils.encode(raw_data)
     signed = sign(encoded_data, keypair)
     return utils.create_magic_envelope(encoded_data, signed)
