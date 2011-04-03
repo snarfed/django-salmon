@@ -5,19 +5,29 @@ from salmon import magicsigs
 from salmon.models import Subscription, UserKeyPair
 
 
-def discover_salmon_endpoint(url):
+def discover_salmon_endpoint(url_or_string):
     """
-    Perform discovery on ``url``. Look for link[rel='salmon'] and
+    Perform discovery on ``url_or_string``. Look for link[rel='salmon'] and
     fetch the href.
     """
-    d = feedparser.parse(url)
-    weblinks = getattr(d.feed, 'links', [])
-    for link in weblinks:
-        link_dict = dict(link)
-        if 'rel' in link_dict and link_dict['rel'] == 'salmon':
-            if 'href' in link:
-                return link['href']
-    return None
+
+    def get_salmon_replies_link(e):
+        """Helper function. fetch href of link[rel=salmon] if it exists."""
+        weblinks = getattr(e, 'links', [])
+        for link in weblinks:
+            link_dict = dict(link)
+            if 'rel' in link_dict and link_dict['rel'] == 'salmon':
+                if 'href' in link_dict:
+                    return link_dict['href']
+        return None
+
+    d = feedparser.parse(url_or_string)
+    if len(d.entries) == 1:
+        # parse out salmon for single atom:entry
+        element = d.entries[0]
+    else:
+        element = d.feed
+    return get_salmon_replies_link(element)
 
 
 def subscribe(feed, feed_url):
