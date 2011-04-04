@@ -16,6 +16,11 @@ def endpoint(request):
     if not magicsigs.verify(author_uri, parsed['data'], parsed['sig']):
         return HttpResponseBadRequest("Could not verify magic signature.")
 
+    # verify that the timestamp is recent
+    updated = utils.parse_updated_from_atom(parsed['data'])
+    if not utils.verify_timestamp(updated):
+        return HttpResponseBadRequest("Invalid timestamp.")
+
     # hand waving on mime_type right now, but seems like this'd be
     # a decent interface.
     utils.slap_notify(parsed['data'], 'application/atom+xml')

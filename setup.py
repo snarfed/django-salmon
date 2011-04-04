@@ -6,4 +6,5 @@ setup(
     packages=['salmon'],
     author="Paul Osman",
     author_email="paul@eval.ca",
+    install_requires=['python-dateutil==1.5'],
 )

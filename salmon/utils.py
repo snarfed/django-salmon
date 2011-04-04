@@ -1,6 +1,9 @@
 import base64
 import urllib2
+import datetime
+
 from xml.etree import ElementTree
+from dateutil.parser import parse as parse_utc_date
 
 from django.conf import settings
 from django.utils.importlib import import_module
@@ -46,6 +49,14 @@ def parse_author_uri_from_atom(data):
     return uri.text
 
 
+def parse_updated_from_atom(data):
+    et = ElementTree.fromstring(data)
+    if et.tag != normalize('entry', ATOM_NS):
+        et = et.find(normalize('entry', ATOM_NS))
+    updated = et.find(normalize('updated', ATOM_NS))
+    return updated.text
+
+
 def parse_host_xrd(xrd):
     et = ElementTree.fromstring(xrd)
     links = et.findall(normalize('Link', XRD_NS))
@@ -81,6 +92,13 @@ def get_public_key(author_uri):
     f = urllib2.urlopen(webfinger_url)
     user_xrd = f.read()
     return parse_public_key_from_xrd(user_xrd)
+
+
+def verify_timestamp(timestamp):
+    d = parse_utc_date(timestamp)
+    d2 = datetime.datetime.now(d.tzinfo)
+    delta = datetime.timedelta(hours=1)
+    return d2 - d < delta
 
 
 def decode(data):
