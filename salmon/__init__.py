@@ -48,17 +48,15 @@ def unsubscribe(feed):
     Subscription.objects.unsubscribe(feed)
 
 
-def slap(content, source, user):
+def slap(content, source, user, mime_type='application/atom+xml'):
     """Notify a source of updated content."""
     sub = Subscription.objects.get_for_object(source)
     if not sub:
         return  # nothing to do
 
     keypair = UserKeyPair.objects.get_or_create(user)
-
-    # hand waving on mime_type right now
     magic_envelope = magicsigs.magic_envelope(
-        content, 'application/atom+xml', keypair)
+        content, mime_type, keypair)
 
     # TODO(paulosman)
     # really crappy HTTP client right now. Can improve when the basic
