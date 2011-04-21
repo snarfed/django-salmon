@@ -16,31 +16,32 @@ To use ``django-salmon``, add it to your ``INSTALLED_APPS`` in ``settings.py``: 
 
    INSTALLED_APPS = (
        ...
-       'salmon',
+       'django_salmon',
        ...
    )
 
 You will need models to represent feeds and comments. Set up signals for your feed model: ::
 
-   import salmon
+   import django_salmon
    ...
    def salmon_subscriber(sender, **kwargs):
        feed = kwargs.get('instance', None)
        if not feed:
            return
-       salmon.subscribe(feed, feed.url)
+       django_salmon.subscribe(feed, feed.url)
    post_save.connect(salmon_subscriber, sender=Feed) 
 
    def salmon_unsubscriber(sender, **kwargs):
        feed = kwargs.get('instance', None)
        if not feed:
            return
-       salmon.unsubscribe(feed)
+       django_salmon.unsubscribe(feed)
    post_delete.connect(salmon_unsubscriber, sender=Feed)
 
 Set up the following signal for your comment model: ::
 
-   from salmon.feeds import create_entry_feed
+   import django_salmon
+   from django_salmon.feeds import create_entry_feed
 
    def comment_handler(sender, **kwargs):
        comment = kwargs.get('instance', None)
@@ -59,7 +60,7 @@ Set up the following signal for your comment model: ::
                                 author_link='acct:' + comment.user_email,
                                 pubdate=comment.submit_date,
                                 parent_id=parent.entry_id)
-       salmon.slap(feed, parent.feed, user)
+       django_salmon.slap(feed, parent.feed, user)
    post_save.connect(comment_handler, sender=Comment)
 
 Finally, in order to process salmon slaps, you must add a handler function to ``settings.py``: ::

@@ -2,7 +2,7 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from salmon import utils, magicsigs
+from django_salmon import utils, magicsigs
 
 
 @csrf_exempt

@@ -1,4 +1,4 @@
-import salmon
+import django_salmon
 
 atom_feed_string = """<?xml version='1.0' encoding='utf-8'?>
 <feed xmlns='http://www.w3.org/2005/Atom'>
@@ -46,5 +46,5 @@ fixtures = (
 
 def test_endpoint_discovery():
     for fixture in fixtures:
-        endpoint = salmon.discover_salmon_endpoint(fixture)
+        endpoint = django_salmon.discover_salmon_endpoint(fixture)
         assert endpoint == 'http://testserver/salmon/endpoint'

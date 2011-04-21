@@ -1,8 +1,8 @@
 import urllib2
 import feedparser
 
-from salmon import magicsigs
-from salmon.models import Subscription, UserKeyPair
+from django_salmon import magicsigs
+from django_salmon.models import Subscription, UserKeyPair
 
 
 def discover_salmon_endpoint(url_or_string):

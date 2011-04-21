@@ -1,6 +1,6 @@
 import datetime
 
-from salmon import utils
+from django_salmon import utils
 
 now = datetime.datetime.now()
 one_hour_ago = now - datetime.timedelta(hours=1)

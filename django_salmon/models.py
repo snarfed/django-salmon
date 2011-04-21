@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 
 
-from salmon import magicsigs
+from django_salmon import magicsigs
 
 
 class UserKeyPairManager(models.Manager):

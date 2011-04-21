@@ -6,7 +6,7 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Util import number
 
-from salmon import utils
+from django_salmon import utils
 
 _WHITESPACE_RE = re.compile(r'\s+')
 _KEY_RE = re.compile(
