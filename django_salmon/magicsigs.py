@@ -1,7 +1,17 @@
 import re
 import base64
 
-from Crypto import Random
+# Google App Engine supports os.urandom() but not /dev/urandom. this monkey
+# patch tells pycrypto to use os.urandom(). see Crypto/Random/OSRNG/__init__.py
+# for details.
+import os
+try:
+  orig_os_name = os.name
+  os.name = 'posix without urandom'
+  from Crypto import Random
+finally:
+  os.name = orig_os_name
+
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Util import number
