@@ -1,8 +1,9 @@
 import urllib2
-import feedparser
 
 from django_salmon import magicsigs
-from django_salmon.models import Subscription, UserKeyPair
+# feedparser and models.py are imported lazily in the methods below so that
+# other modules in this package can be imported and used without requiring
+# Django.
 
 
 def discover_salmon_endpoint(url_or_string):
@@ -10,6 +11,7 @@ def discover_salmon_endpoint(url_or_string):
     Perform discovery on ``url_or_string``. Look for link[rel='salmon'] and
     fetch the href.
     """
+    import feedparser
 
     def get_salmon_replies_link(e):
         """Helper function. fetch href of link[rel=salmon] if it exists."""
@@ -37,6 +39,8 @@ def subscribe(feed, feed_url):
     ``feed`` is the feed object, however it is represented in your system.
     ``feed_url`` is the URL of the Atom / RSS feed.
     """
+    from django_salmon.models import Subscription
+
     salmon_endpoint = discover_salmon_endpoint(feed_url)
     if not salmon_endpoint:
         return None
@@ -45,11 +49,14 @@ def subscribe(feed, feed_url):
 
 def unsubscribe(feed):
     """Destroy a subscription to the feed object ``feed``."""
+    from django_salmon.models import Subscription
     Subscription.objects.unsubscribe(feed)
 
 
 def slap(content, source, user, mime_type='application/atom+xml'):
     """Notify a source of updated content."""
+    from django_salmon.models import Subscription, UserKeyPair
+
     sub = Subscription.objects.get_for_object(source)
     if not sub:
         return  # nothing to do
