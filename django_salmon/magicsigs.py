@@ -62,7 +62,7 @@ def generate(bits=1024):
     """
     rng = Random.new().read
     key = RSA.generate(bits, rng)
-    # e - modulus, n - exponent, d - private exponent
+    # e - public exponent, n - modulus, d - private exponent
     return (long_to_base64(key.e),
             long_to_base64(key.n),
             long_to_base64(key.d))
