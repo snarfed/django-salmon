@@ -37,7 +37,7 @@ class UserKeyPair(models.Model):
         return self.__unicode__()
 
     def public_key(self):
-        return "RSA.%s.%s" % (self.public_exponent, self.mod)
+        return "RSA.%s.%s" % (self.mod, self.public_exponent)
 
 
 class SubscriptionManager(models.Manager):
