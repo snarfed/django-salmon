@@ -111,8 +111,8 @@ def verify(author_uri, data, signed):
 def magic_envelope(raw_data, data_type, key):
     """Wrap the provided data in a magic envelope."""
     keypair = RSA.construct(
-        (base64_to_long(key.public_exponent.encode('utf-8')),
-         base64_to_long(key.mod.encode('utf-8')),
+        (base64_to_long(key.mod.encode('utf-8')),
+         base64_to_long(key.public_exponent.encode('utf-8')),
          base64_to_long(key.private_exponent.encode('utf-8'))))
     encoded_data = utils.encode(raw_data)
     signed = sign(encoded_data, keypair)
