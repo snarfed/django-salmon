@@ -3,7 +3,7 @@ import urllib2
 from django_salmon import magicsigs
 # feedparser and models.py are imported lazily in the methods below so that
 # other modules in this package can be imported and used without requiring
-# Django.
+# feedparser or Django.
 
 
 def discover_salmon_endpoint(url_or_string):

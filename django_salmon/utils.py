@@ -3,10 +3,8 @@ import urllib2
 import datetime
 
 from xml.etree import ElementTree
-from dateutil.parser import parse as parse_utc_date
-
-from django.conf import settings
-from django.utils.importlib import import_module
+# dateutil.parser is imported lazily below, in verify_timestamp(), so that other
+# modules in this package can be imported and used without requiring dateutil.
 
 
 ATOM_NS = 'http://www.w3.org/2005/Atom'
@@ -95,6 +93,7 @@ def get_public_key(author_uri):
 
 
 def verify_timestamp(timestamp):
+    from dateutil.parser import parse as parse_utc_date
     d = parse_utc_date(timestamp)
     d2 = datetime.datetime.now(d.tzinfo)
     delta = datetime.timedelta(hours=1)
@@ -115,6 +114,9 @@ def slap_handler(data, mime_type):
 
 
 def slap_notify(data, mime_type):
+    from django.conf import settings
+    from django.utils.importlib import import_module
+
     notifier = getattr(settings, 'SALMON_SLAP_HANDLER',
                        'salmon.utils.slap_handler')
     notifier, notifier_function = notifier.rsplit('.', 1)
