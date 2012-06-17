@@ -5,12 +5,12 @@ from django_salmon import magicsigs
 # other modules in this package can be imported and used without requiring
 # feedparser or Django.
 
-SALMON_LINK_RELS = frozenset((
+SALMON_LINK_RELS = (
     'salmon',
     'salmon-reply',
     'http://salmon-protocol.org/ns/salmon',
     'http://salmon-protocol.org/ns/salmon-replies',
-    ))
+    )
 
 
 def discover_salmon_endpoint(url_or_string):
