@@ -5,6 +5,12 @@ from django_salmon import magicsigs
 # other modules in this package can be imported and used without requiring
 # feedparser or Django.
 
+SALMON_LINK_RELS = (
+    'salmon',
+    'salmon-reply',
+    'http://salmon-protocol.org/ns/salmon-replies',
+    )
+
 
 def discover_salmon_endpoint(url_or_string):
     """
@@ -18,7 +24,7 @@ def discover_salmon_endpoint(url_or_string):
         weblinks = getattr(e, 'links', [])
         for link in weblinks:
             link_dict = dict(link)
-            if 'rel' in link_dict and link_dict['rel'] == 'salmon':
+            if link_dict.get('rel') in SALMON_LINK_RELS:
                 if 'href' in link_dict:
                     return link_dict['href']
         return None
