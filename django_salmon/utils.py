@@ -101,7 +101,7 @@ def verify_timestamp(timestamp):
 
 
 def decode(data):
-    return base64.urlsafe_b64decode(data).encode('utf-8')
+    return base64.urlsafe_b64decode(data).decode('utf-8')
 
 
 def encode(s):
