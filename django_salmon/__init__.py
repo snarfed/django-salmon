@@ -20,23 +20,22 @@ def discover_salmon_endpoint(url_or_string):
     """
     import feedparser
 
-    def get_salmon_replies_link(e):
-        """Helper function. fetch href of link[rel=salmon] if it exists."""
-        weblinks = getattr(e, 'links', [])
-        for link in weblinks:
-            link_dict = dict(link)
-            if link_dict.get('rel') in SALMON_LINK_RELS:
-                if 'href' in link_dict:
-                    return link_dict['href']
-        return None
-
     d = feedparser.parse(url_or_string)
-    if len(d.entries) == 1:
-        # parse out salmon for single atom:entry
-        element = d.entries[0]
-    else:
-        element = d.feed
-    return get_salmon_replies_link(element)
+    for elem in d.entries + [d.feed]:
+        link = get_salmon_replies_link(elem)
+        if link:
+            return link
+
+
+def get_salmon_replies_link(e):
+    """Helper function. fetch href of link[rel=salmon] if it exists."""
+    weblinks = getattr(e, 'links', []) or e.get('links', [])
+    for link in weblinks:
+        link_dict = dict(link)
+        if link_dict.get('rel') in SALMON_LINK_RELS:
+            if 'href' in link_dict:
+                return link_dict['href']
+    return None
 
 
 def subscribe(feed, feed_url):
