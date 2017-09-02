@@ -6,5 +6,8 @@ setup(
     packages=['django_salmon'],
     author="Paul Osman",
     author_email="paul@eval.ca",
-    install_requires=['python-dateutil==1.5'],
+    install_requires=[
+        'pycryptodome',
+        'python-dateutil',
+    ],
 )
