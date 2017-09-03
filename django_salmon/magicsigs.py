@@ -83,7 +83,7 @@ def make_esma_msg(data, keypair):
     return chr(0) + chr(1) + pad_string + chr(0) + encoded
 
 
-def sign(data, keypair):
+def sign(plaintext, rsa):
     """
     Sign the data. Most of this is taken verbatim from John Panzer's
     reference implementation:
@@ -91,37 +91,44 @@ def sign(data, keypair):
     http://code.google.com/p/salmon-protocol/
     """
     rng = Random.new().read
-    esma_msg = make_esma_msg(data, keypair)
-    sig_long = keypair.sign(esma_msg, rng)[0]
+    esma_msg = make_esma_msg(plaintext, rsa)
+    sig_long = rsa.sign(esma_msg, rng)[0]
     sig_bytes = number.long_to_bytes(sig_long)
-    return base64.urlsafe_b64encode(sig_bytes)
+    sig = base64.urlsafe_b64encode(sig_bytes)
+    logging.debug('Signing salmon with key %s\n plaintext %s\n sig %s',
+                  rsa, plaintext, sig)
+    return sig
 
 
-def verify(author_uri, data, signed, key=None):
+def verify(author_uri, raw_data, signed, key=None):
     """Verify that ``signed`` is ``data`` signed by ``author_uri``."""
     if author_uri:
-        public_exp, mod = utils.get_public_key(author_uri)
+        mod, public_exp = utils.get_public_key(author_uri)
     else:
         public_exp = key.public_exponent
         mod = key.mod
     rsa = RSA.construct((base64_to_long(str(mod)), base64_to_long(str(public_exp))))
     putative = base64_to_long(signed)
-    esma = make_esma_msg(sig_plaintext(data), rsa)
-    return rsa.verify(esma, (putative,))
+    esma = make_esma_msg(sig_plaintext(raw_data), rsa)
+    verified = rsa.verify(esma, (putative,))
+    logging.debug('Verifying salmon with key %s %s\n plaintext %s\n sig %s\n%s',
+                  public_exp, mod, sig_plaintext(raw_data), signed, verified)
+    return verified
 
 
 def magic_envelope(raw_data, data_type, key):
     """Wrap the provided data in a magic envelope."""
-    keypair = RSA.construct(
+    logging.debug('Signing key: %s %s', key.public_exponent, key.mod)
+    rsa = RSA.construct(
         (base64_to_long(key.mod.encode('utf-8')),
          base64_to_long(key.public_exponent.encode('utf-8')),
          base64_to_long(key.private_exponent.encode('utf-8'))))
-    signed = sign(sig_plaintext(raw_data), keypair)
+    signed = sign(sig_plaintext(raw_data), rsa)
     return utils.create_magic_envelope(utils.encode(raw_data), signed)
 
 
 def sig_plaintext(raw_data):
     text = '.'.join(base64.urlsafe_b64encode(x) for x in
-                    (raw_data, 'application/atom+xml', 'base64url', 'RSA-SHA256'))
+        (raw_data.encode('utf-8'), 'application/atom+xml', 'base64url', 'RSA-SHA256'))
     logging.info('Signing plaintext %s', text)
     return text
