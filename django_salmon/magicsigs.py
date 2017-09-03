@@ -1,5 +1,6 @@
-import re
 import base64
+import logging
+import re
 
 # Google App Engine supports os.urandom() but not /dev/urandom. this monkey
 # patch tells pycrypto to use os.urandom(). see Crypto/Random/OSRNG/__init__.py
@@ -93,18 +94,19 @@ def sign(data, keypair):
     esma_msg = make_esma_msg(data, keypair)
     sig_long = keypair.sign(esma_msg, rng)[0]
     sig_bytes = number.long_to_bytes(sig_long)
-    return base64.urlsafe_b64encode(sig_bytes).encode('utf-8')
+    return base64.urlsafe_b64encode(sig_bytes)
 
 
-def verify(author_uri, data, signed):
+def verify(author_uri, data, signed, key=None):
     """Verify that ``signed`` is ``data`` signed by ``author_uri``."""
-    public_exp, mod = utils.get_public_key(author_uri)
-    public_exp = base64_to_long(public_exp)
-    mod = base64_to_long(mod)
-    rsa = RSA.construct((public_exp, mod))
-    data = utils.encode(data)
-    putative = base64_to_long(signed.encode('utf-8'))
-    esma = make_esma_msg(data, rsa)
+    if author_uri:
+        public_exp, mod = utils.get_public_key(author_uri)
+    else:
+        public_exp = key.public_exponent
+        mod = key.mod
+    rsa = RSA.construct((base64_to_long(str(mod)), base64_to_long(str(public_exp))))
+    putative = base64_to_long(signed)
+    esma = make_esma_msg(sig_plaintext(data), rsa)
     return rsa.verify(esma, (putative,))
 
 
@@ -114,6 +116,12 @@ def magic_envelope(raw_data, data_type, key):
         (base64_to_long(key.mod.encode('utf-8')),
          base64_to_long(key.public_exponent.encode('utf-8')),
          base64_to_long(key.private_exponent.encode('utf-8'))))
-    encoded_data = utils.encode(raw_data)
-    signed = sign(encoded_data, keypair)
-    return utils.create_magic_envelope(encoded_data, signed)
+    signed = sign(sig_plaintext(raw_data), keypair)
+    return utils.create_magic_envelope(utils.encode(raw_data), signed)
+
+
+def sig_plaintext(raw_data):
+    text = '.'.join(base64.urlsafe_b64encode(x) for x in
+                    (raw_data, 'application/atom+xml', 'base64url', 'RSA-SHA256'))
+    logging.info('Signing plaintext %s', text)
+    return text
