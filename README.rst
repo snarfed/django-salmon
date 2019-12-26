@@ -2,7 +2,7 @@
 django-salmon
 =============
 
-This is a fork of ``django-salmon``, a drop-in `Django`_ application that adds support for the `Salmon Protocol`_. It's maintained by @snarfed solely for use in [Bridgy Fed](https://fed.brid.gy/). It requires Python 3.
+This is a fork of ``django-salmon``, a drop-in `Django`_ application that adds support for the `Salmon Protocol`_. It's maintained by @snarfed solely for use in `Bridgy Fed <https://fed.brid.gy/>`__. It requires Python 3.
 
 .. _Django: http://www.djangoproject.com/
 .. _Salmon Protocol: http://www.salmon-protocol.org/salmon-protocol-summary
