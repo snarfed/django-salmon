@@ -1,4 +1,4 @@
-import urllib2
+import urllib.request
 
 from django_salmon import magicsigs
 # feedparser and models.py are imported lazily in the methods below so that
@@ -77,10 +77,10 @@ def slap(content, source, user, mime_type='application/atom+xml'):
     headers = {
         'Content-Type': 'application/magic-envelope+xml',
     }
-    req = urllib2.Request(sub.salmon_endpoint, magic_envelope, headers)
+    req = urllib.request.Request(sub.salmon_endpoint, magic_envelope, headers)
     try:
-        response = urllib2.urlopen(req)
-        print response.read()
-    except urllib2.HTTPError, e:
-        print repr(e)
-        print e.read()
+        response = urllib.request.urlopen(req)
+        print(response.read())
+    except urllib.request.HTTPError as e:
+        print(repr(e))
+        print(e.read())

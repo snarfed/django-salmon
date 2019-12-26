@@ -1,5 +1,5 @@
 import base64
-import urllib2
+import urllib.request
 import datetime
 
 from xml.etree import ElementTree
@@ -16,6 +16,11 @@ normalize = lambda tag, ns: "{%s}%s" % (ns, tag)
 
 def create_magic_envelope(data, sig, mime_type='application/atom+xml',
                           encoding='base64url', alg='RSA-SHA256'):
+    """
+    Args:
+      data: str (not bytes!)
+      sig: str (not bytes!)
+    """
     root = ElementTree.Element('me:env', attrib={'xmlns:me': MAGIC_ENV_NS})
     data_element = ElementTree.SubElement(root, 'me:data', attrib={
         'type': mime_type,
@@ -31,6 +36,12 @@ def create_magic_envelope(data, sig, mime_type='application/atom+xml',
 
 
 def parse_magic_envelope(magic_envelope):
+    """
+    Returns: dict: {
+      'data': str (not bytes!),
+      'sig': str (not bytes!),
+    }
+    """
     et = ElementTree.fromstring(magic_envelope)
     data = [e for e in list(et) if e.tag == normalize('data', MAGIC_ENV_NS)]
     sig = [e for e in list(et) if e.tag == normalize('sig', MAGIC_ENV_NS)]
@@ -83,11 +94,11 @@ def get_public_key(author_uri):
         return False  # not implemented yet
     (user, host) = author_uri[5:].split('@')
     url = 'http://%s/.well-known/host-meta' % (host,)
-    f = urllib2.urlopen(url)
+    f = urllib.request.urlopen(url)
     host_xrd = f.read()
     uri_template = parse_host_xrd(host_xrd)
     webfinger_url = uri_template.replace('{uri}', author_uri[5:])
-    f = urllib2.urlopen(webfinger_url)
+    f = urllib.request.urlopen(webfinger_url)
     user_xrd = f.read()
     return parse_public_key_from_xrd(user_xrd)
 
@@ -105,8 +116,7 @@ def decode(data):
 
 
 def encode(s):
-    return base64.urlsafe_b64encode(
-        unicode(s).encode('utf-8')).encode('utf-8')
+    return base64.urlsafe_b64encode(str(s).encode('utf-8'))
 
 
 def slap_handler(data, mime_type):

@@ -74,13 +74,13 @@ def make_esma_msg(data, keypair):
     magic_sha256_header = [0x30, 0x31, 0x30, 0xd, 0x6, 0x9, 0x60, 0x86,
                            0x48, 0x1, 0x65, 0x3, 0x4, 0x2, 0x1, 0x5, 0x0,
                            0x4, 0x20]
-    encoded = ''.join([chr(c) for c in magic_sha256_header]) + h
+    encoded = bytes(magic_sha256_header) + h
 
     # Round up to next byte
     modulus_size = keypair.size()
     msg_size_bits = modulus_size + 8 - (modulus_size % 8)
-    pad_string = chr(0xFF) * (msg_size_bits / 8 - len(encoded) - 3)
-    return chr(0) + chr(1) + pad_string + chr(0) + encoded
+    pad_string = bytes([0xFF]) * (msg_size_bits // 8 - len(encoded) - 3)
+    return bytes([0, 1]) + pad_string + bytes([0]) + encoded
 
 
 def sign(plaintext, rsa):
@@ -101,7 +101,12 @@ def sign(plaintext, rsa):
 
 
 def verify(author_uri, raw_data, signed, key=None):
-    """Verify that ``signed`` is ``data`` signed by ``author_uri``."""
+    """Verify that ``signed`` is ``data`` signed by ``author_uri``.
+
+    Args:
+      raw_data: str
+      signed: bytes
+    """
     if author_uri:
         mod, public_exp = utils.get_public_key(author_uri)
     else:
@@ -124,11 +129,11 @@ def magic_envelope(raw_data, data_type, key):
          base64_to_long(key.public_exponent.encode('utf-8')),
          base64_to_long(key.private_exponent.encode('utf-8'))))
     signed = sign(sig_plaintext(raw_data), rsa)
-    return utils.create_magic_envelope(utils.encode(raw_data), signed)
+    return utils.create_magic_envelope(raw_data, signed.decode())
 
 
 def sig_plaintext(raw_data):
-    text = '.'.join(base64.urlsafe_b64encode(x) for x in
-        (raw_data.encode('utf-8'), 'application/atom+xml', 'base64url', 'RSA-SHA256'))
+    text = b'.'.join(base64.urlsafe_b64encode(x) for x in
+        (raw_data.encode('utf-8'), b'application/atom+xml', b'base64url', b'RSA-SHA256'))
     logging.info('Signing plaintext %s', text)
     return text

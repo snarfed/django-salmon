@@ -29,12 +29,12 @@ class UserKeyPair(models.Model):
 
     objects = UserKeyPairManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return "RSA.%s.%s.%s" % (self.mod, self.public_exponent,
                                  self.private_exponent)
 
     def __string__(self):
-        return self.__unicode__()
+        return self.__str__()
 
     def public_key(self):
         return "RSA.%s.%s" % (self.mod, self.public_exponent)
@@ -71,11 +71,11 @@ class Subscription(models.Model):
 
     objects = SubscriptionManager()
 
-    def __unicode__(self):
+    def __str__(self):
         obj = self.content_type.get_object_for_this_type(id=self.object_id)
         return u":".join((
             obj.__class__.__name__,
-            unicode(obj), self.salmon_endpoint))
+            str(obj), self.salmon_endpoint))
 
     def get_object(self):
         cls = self.content_type.model_class()
